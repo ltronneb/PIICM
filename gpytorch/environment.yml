@@ -1,0 +1,7 @@
+name: gpytorch
+channels:
+  - pytorch
+dependencies:
+  - pytorch
+  - scikit-learn
+  - scipy
