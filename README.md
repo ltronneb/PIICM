@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/192396008.svg)](https://zenodo.org/badge/latestdoi/192396008)
+[![DOI](https://zenodo.org/badge/465453049.svg)](https://zenodo.org/badge/latestdoi/465453049)
 
 # PIICM
 Permutation Invariant multi-output Gaussian Process regression for dose-response prediction
