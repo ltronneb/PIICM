@@ -50,6 +50,7 @@ class GPattKroneckerSumAddedDiagLazyTensor(SumLazyTensor):
         """
         Log-determinant computed uses an approximation via Weyl's inequality
         """
+        print("computing log-det with Weyl's inequality!")
         # Compute eigenvectors for gradients
         # It suffices to eigen-decomp the second term in the KroneckerSum
         evals_unsorted, _ = self._lazy_tensor.lazy_tensors[1].symeig(eigenvectors=False)
@@ -63,9 +64,12 @@ class GPattKroneckerSumAddedDiagLazyTensor(SumLazyTensor):
         noise_unsorted = noise_unsorted.masked_fill(self.missing_idx, 0)  # Mask large variances
         noise = noise_unsorted.sort(descending=True)[0]
         # Apply Weyl's inequality
+        print(len(evals))
         weyl = torch.zeros(evals.shape,device=self.device)
-        weyl[0::2] = evals[0::2] + noise[0::2]
-        weyl[1::2] = evals[1::2] + noise[0::2]
+        #weyl[0::2] = evals[0::2] + noise[0::2]
+        #weyl[1::2] = evals[1::2] + noise[0::2]
+        weyl[0::2] = evals[0:int(len(evals)/2):1] + noise[0:int(len(evals)/2):1]
+        weyl[1::2] = evals[1:int(len(evals)/2+1):1] + noise[0:int(len(evals)/2):1]
         top_evals = (self.n_obs / self.n_total) * weyl[:self.n_obs]
         logdet = torch.log(top_evals).sum(dim=-1)
         return logdet
