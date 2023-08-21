@@ -5,8 +5,8 @@ Permutation Invariant multi-output Gaussian Process regression for dose-response
 
 
 ## Installation
-1. Set up a conda environment and install [PyTorch](https://pytorch.org/)
-2. Install the modified version of [GPyTorch](https://gpytorch.ai/) by running 
+The steps below sets up a conda environment and installs the required version of  PyTorch. It then clones the repo, and installs PIICM.
+
 ```{python}
 conda create --name piicm python=3.9
 conda activate piicm
@@ -15,5 +15,5 @@ git clone https://github.com/ltronneb/PIICM.git
 cd PIICM/gpytorch
 pip install .
 ```
-3. Scripts for pre-processing the dataset are found in preprocessing/
-4. Script for formatting the data and running models are in model/
+
+To replicate the results from the paper, the scripts for pre-processing the dataset are found in preprocessing/ and the script for formatting the data and running models are in model/
