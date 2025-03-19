@@ -1,0 +1,93 @@
+
+data:
+  batch_size: 250
+  qm9_file: 'data/qm9.txt'
+  zinc_file: 'data/zinc_100k.txt'              ##'data/zinc_250k_substructure_chemistry.txt' ## zinc_250k.txt zinc_100k.txt
+  type_of_encoding: 1
+
+decoder:
+  latent_dimension: 50
+  gru_neurons_num: 100
+  gru_stack_size: 1
+
+encoder:
+  layer_1d: 100
+  layer_2d: 100
+  layer_3d: 100
+  latent_dimension: 50
+  
+gplvm:
+   latent_dim: 3
+   num_inducing: 350
+
+training:
+  KLD_alpha: 1.0e-04
+  lr_enc: 0.005
+  lr_dec: 0.005
+  num_epochs: 50
+  sample_num: 100
+  
+property_filter:
+    MW: True
+    LogS: False
+    LogD: False
+    LogP: False
+    nHA: True
+    nHD: True
+    TPSA: False
+    nRot: False
+    nRing: True
+    MaxRing: False
+    nHet: True
+    fChar: True
+    nRig: False
+    Flex: False
+    nStereo: True
+    QED: False
+    SAS: True
+    Fsp3: False
+    
+  
+min_thresholds:
+    MW: 15
+    LogS: -4.4
+    LogD: -2
+    LogP: -3
+    nHA: 0
+    nHD: 0
+    TPSA: 48
+    nRot: 1
+    nRing: 0
+    MaxRing: 0 
+    nHet: 0
+    fChar: 0
+    nRig: 2
+    Flex: 0.125
+    nStereo: 0
+    QED: 0.122
+    SAS: 1
+    Fsp3: 0
+    
+    
+max_thresholds:
+    MW: 350
+    LogS: 0.3
+    LogD: 3.5
+    LogP: 4
+    nHA: 12
+    nHD: 12
+    TPSA: 175
+    nRot: 19
+    nRing: 2
+    MaxRing: 12 
+    nHet: 12
+    fChar: 1
+    nRig: 18
+    Flex: 0.47
+    nStereo: 0
+    QED: 1
+    SAS: 4
+    Fsp3: 1
+  
+# To remove \n from zinc-250k dataset 
+#df = df.replace('\n','', regex=True)
