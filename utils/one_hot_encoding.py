@@ -27,7 +27,7 @@ def get_properties_array(file_path):
     properties_arr = np.asanyarray(df[['logP','qed', 'SAS']])
     return properties_arr
 
-def get_selfie_and_smiles_encodings_for_dataset(file_path):
+def get_selfie_and_smiles_encodings_for_dataset(smiles_df):
     
     """
     Returns encoding, alphabet and length of largest molecule in SMILES and
@@ -42,19 +42,8 @@ def get_selfie_and_smiles_encodings_for_dataset(file_path):
         - smiles encoding (equivalent to file content)
         - smiles alphabet (character based)
         - longest smiles string
-    """
-
-    df = pd.read_csv(file_path)
-    
-    if file_path.find('zinc') != -1:
-    
-        df_prop = ['logP','qed','SAS']
-        properties = torch.Tensor(np.array(df[df_prop]))
-    
-    else: 
-        properties = None
-    
-    smiles_list = np.asanyarray(df.smiles)
+    """    
+    smiles_list = np.asanyarray(smiles_df.smiles)
 
     smiles_alphabet = list(set(''.join(smiles_list)))
     smiles_alphabet.append(' ')  # for padding
@@ -73,10 +62,10 @@ def get_selfie_and_smiles_encodings_for_dataset(file_path):
 
     largest_selfies_len = max(sf.len_selfies(s) for s in selfies_list)
 
-    print('Finished translating SMILES to SELFIES.')
+    print('Finished translating SMILES to SELFIES')
 
     return selfies_list, selfies_alphabet, largest_selfies_len, \
-           smiles_list, smiles_alphabet, largest_smiles_len, properties
+           smiles_list, smiles_alphabet, largest_smiles_len
 
 def smile_to_hot(smile, largest_smile_len, alphabet):
     
