@@ -11,7 +11,7 @@ import torch
 import torch.optim as optim
 import time
 from selfies.exceptions import EncoderError, SMILESParserError
-from model.generative_model import RNNEncoder, RNNDecoder, compute_elbo, get_latents, reconstruct, \
+from model.generative_model_rnn import RNNEncoder, RNNDecoder, compute_elbo, get_latents, reconstruct, \
     decode, lr_at_epoch, kl_weight_at_epoch, compute_mae_loss, compute_recon_quality, compute_validation_recon
 from utils.one_hot_encoding import get_selfie_and_smiles_encodings_for_dataset, multiple_selfies_to_int
         

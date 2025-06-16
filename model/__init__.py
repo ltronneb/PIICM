@@ -1,1 +1,1 @@
-from .generative_model import * 
+from .generative_model_rnn import * 

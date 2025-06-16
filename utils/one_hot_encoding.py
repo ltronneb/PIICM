@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Smiles to one-hot, one-hot to smiles and selfies to smiles
-
 """
 import numpy as np
 import selfies as sf
@@ -27,7 +26,7 @@ def get_properties_array(file_path):
     properties_arr = np.asanyarray(df[['logP','qed', 'SAS']])
     return properties_arr
 
-def get_selfie_and_smiles_encodings_for_dataset(smiles_df):
+def get_selfie_and_smiles_encodings_for_dataset(file_path):
     
     """
     Returns encoding, alphabet and length of largest molecule in SMILES and
@@ -42,8 +41,19 @@ def get_selfie_and_smiles_encodings_for_dataset(smiles_df):
         - smiles encoding (equivalent to file content)
         - smiles alphabet (character based)
         - longest smiles string
-    """    
-    smiles_list = np.asanyarray(smiles_df.smiles)
+    """
+
+    df = pd.read_csv(file_path)
+    
+    if file_path.find('zinc') != -1:
+    
+        df_prop = ['logP','qed','SAS']
+        properties = torch.Tensor(np.array(df[df_prop]))
+    
+    else: 
+        properties = None
+    
+    smiles_list = np.asanyarray(df.smiles)
 
     smiles_alphabet = list(set(''.join(smiles_list)))
     smiles_alphabet.append(' ')  # for padding
@@ -53,19 +63,25 @@ def get_selfie_and_smiles_encodings_for_dataset(smiles_df):
 
     print('--> Translating SMILES to SELFIES...')
     selfies_list = list(map(sf.encoder, smiles_list))
+    selfies_list = [s.replace(".", "[.]") for s in selfies_list]
 
     all_selfies_symbols = sf.get_alphabet_from_selfies(selfies_list)
+    all_selfies_symbols.add('[sos]')
+    all_selfies_symbols.add('[eos]')
     all_selfies_symbols.add('[nop]')
-    all_selfies_symbols.add('.')
     selfies_alphabet = list(all_selfies_symbols)
     selfies_alphabet.sort()
-
+    print(selfies_alphabet)
     largest_selfies_len = max(sf.len_selfies(s) for s in selfies_list)
 
-    print('Finished translating SMILES to SELFIES')
+    print('Finished translating SMILES to SELFIES.')
 
     return selfies_list, selfies_alphabet, largest_selfies_len, \
-           smiles_list, smiles_alphabet, largest_smiles_len
+           smiles_list, smiles_alphabet, largest_smiles_len, properties
+           
+def smiles_to_selfies(smiles_list):
+    
+    return [sf.encoder(x) for x in smiles_list]
 
 def smile_to_hot(smile, largest_smile_len, alphabet):
     
@@ -123,20 +139,46 @@ def selfies_to_hot(selfie, largest_selfie_len, alphabet):
 
     return integer_encoded, np.array(onehot_encoded)
 
+# def selfies_to_integer_encoded(selfie, largest_selfie_len, alphabet):
+    
+#     """Go from a single selfies string to an integer encoding.
+#     """
+#     symbol_to_int = dict((c, i) for i, c in enumerate(alphabet))
+
+#     # pad with [nop]
+#     selfie += '[nop]' * (largest_selfie_len - sf.len_selfies(selfie))
+
+#     # integer encode
+#     symbol_list = sf.split_selfies(selfie)
+#     integer_encoded = [symbol_to_int[symbol] for symbol in symbol_list]
+    
+#     return integer_encoded
+
 def selfies_to_integer_encoded(selfie, largest_selfie_len, alphabet):
     
-    """Go from a single selfies string to an integer encoding.
-    """
+    """Go from a single SELFIES string to an integer encoding, with SOS/EOS."""
     
-    symbol_to_int = dict((c, i) for i, c in enumerate(alphabet))
+    sos_token = '[sos]'
+    eos_token = '[eos]'
+    # Build your mapping (alphabet should already include sos, eos, nop)
+    symbol_to_int = {c: i for i, c in enumerate(alphabet)}
 
-    # pad with [nop]
-    selfie += '[nop]' * (largest_selfie_len - sf.len_selfies(selfie))
+    # 1) Split into tokens *and* force it into a list
+    symbol_list = list(sf.split_selfies(selfie))
 
-    # integer encode
-    symbol_list = sf.split_selfies(selfie)
-    integer_encoded = [symbol_to_int[symbol] for symbol in symbol_list]
-    
+    # 2) Add SOS/EOS
+    symbol_list = [sos_token] + symbol_list + [eos_token]
+
+    # 3) Pad out to exactly largest_selfie_len + 2
+    pad_token = '[nop]'
+    total_len = largest_selfie_len + 2  # accounting for sos+eos
+    if len(symbol_list) < total_len:
+        symbol_list += [pad_token] * (total_len - len(symbol_list))
+    else:
+        symbol_list = symbol_list[:total_len]
+
+    # 4) Integer‐encode
+    integer_encoded = [symbol_to_int[s] for s in symbol_list]
     return integer_encoded
 
 def multiple_selfies_to_int(selfies_list, largest_molecule_len, alphabet):
@@ -176,11 +218,35 @@ def int_to_selfie_and_smile(int_encoded, encoding_alphabet):
         molecule_pre = ''
         
         for i in int_encoded[_]:
-            molecule_pre += encoding_alphabet[i.item()]
-        
+            molecule_pre += encoding_alphabet[i.int().item()]
         molecule = molecule_pre.replace(' ', '')
     
         selfie_mols.append(molecule)            
         smile_mols.append(sf.decoder(molecule))
         
     return smile_mols, selfie_mols
+
+def int_to_selfies(int_encoded_batch, encoding_alphabet):
+    """
+    Converts a batch of integer-encoded SELFIES back to SELFIES strings.
+    
+    Args:
+        int_encoded_batch: (N x L) tensor or array of integer indices
+        encoding_alphabet: list mapping indices to SELFIES tokens
+        
+    Returns:
+        List of SELFIES strings
+    """
+    selfies_list = []
+
+    for row in int_encoded_batch:
+        tokens = [encoding_alphabet[int(i)] for i in row]
+        # Remove padding and stop at first [eos] if present
+        if '[eos]' in tokens:
+            tokens = tokens[:tokens.index('[eos]')]
+        tokens = [t for t in tokens if t not in ['[nop]', '[sos]']]
+        selfies_str = ''.join(tokens)
+        selfies_list.append(selfies_str)
+    
+    return selfies_list
+

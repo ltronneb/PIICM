@@ -3,6 +3,7 @@ data:
   batch_size: 250
   qm9_file: 'data/qm9.txt'
   zinc_file: 'data/zinc_100k.txt'              ##'data/zinc_250k_substructure_chemistry.txt' ## zinc_250k.txt zinc_100k.txt
+  merged_drugs_file: 'data/merged_drugs.csv'
   type_of_encoding: 1
 
 decoder:
